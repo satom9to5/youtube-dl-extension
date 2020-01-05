@@ -1,0 +1,55 @@
+<template>
+  <div class="main">
+    <h2>Queued Tasks</h2>
+
+    <ul>
+      <li v-for="(task, index) in tasks" :key="index" class="format">
+        <a :href="task.url" target="_blank" rel="noopener noreferrer">
+          {{ task.title }} (<span>{{ task.video_format }}p</span><span v-show="task.audio_format != ''"> x {{ task.audio_format }}p</span>)
+        </a>
+        <p>
+          Output Path: {{ task.output_path }}
+          Created At: {{ task.created_at }}
+        </p>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script lang="ts">
+import Vue from 'vue'
+
+import tabs from 'chromeLibs/tabs'
+
+import workerMessage from 'common/workerMessage'
+
+export default Vue.extend({
+  name: 'Info',
+
+  components: {},
+
+  data(): any {
+    return {
+      tasks: [],
+      failedTasks: [],
+    }
+  },
+  
+  async created() {
+    this.tasks = await workerMessage.getTasks()
+  },
+
+  methods: {
+  }
+});
+</script>
+
+<style scoped>
+li {
+  list-style: none;
+}
+
+li.format {
+  padding: 5px 0 5px 0;
+}
+</style>

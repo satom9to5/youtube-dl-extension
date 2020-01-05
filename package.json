@@ -1,0 +1,27 @@
+{
+  "name": "extension",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "node node_modules/webpack/bin/webpack.js --display-error-details --mode development",
+    "watch": "node node_modules/webpack/bin/webpack.js --watch --progress --mode development"
+  },
+  "dependencies": {
+    "vue": "^2.6.6",
+    "ytdl-core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.86",
+    "css-loader": "^3.2.1",
+    "jest": "^24.8.0",
+    "js-yaml-loader": "^1.2.2",
+    "prettier": "^1.19.1",
+    "style-loader": "^1.0.1",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.3",
+    "vue-loader": "^15.7.2",
+    "vue-template-compiler": "^2.6.10",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10"
+  }
+}

@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  extension:
+    build:
+      context: .
+    image: satom9to5/youtube-dl-extension
+    volumes:
+      - .:/extension
+      - /home/vagrant/node_modules/youtube-dl-extension:/extension/node_modules
+    tty: true
