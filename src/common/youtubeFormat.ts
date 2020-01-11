@@ -64,23 +64,22 @@ export function getMaxPriorityFormat(videoInfo: ytdl.videoInfo): Promise<VideoAu
     const sortedVideoFormats = videoInfo.formats
       .filter((videoFormat: ytdl.videoFormat) => videoFormat.bitrate !== null)
       .sort((a: ytdl.videoFormat, b: ytdl.videoFormat): number => {
-        const diff: number = parseInt(b.qualityLabel) - parseInt(a.qualityLabel)
-        if (diff != 0) {
-          return diff
+        if (a.container !== b.container) {
+          let aContainerIndex: number = 0
+          let bContainerIndex: number = 0
+          priorityConfig.containers.forEach((container: string, index: number): void => {
+            if (container == a.container) {
+              aContainerIndex = index
+            }
+            if (container == b.container) {
+              bContainerIndex = index
+            }
+          })
+
+          return descOrder ? aContainerIndex - bContainerIndex : bContainerIndex - aContainerIndex
+        } else {
+          return parseInt(b.qualityLabel) - parseInt(a.qualityLabel)
         }
-
-        let aContainerIndex: number = 0
-        let bContainerIndex: number = 0
-        priorityConfig.containers.forEach((container: string, index: number): void => {
-          if (container == a.container) {
-            aContainerIndex = index
-          }
-          if (container == b.container) {
-            bContainerIndex = index
-          }
-        })
-
-        return descOrder ? aContainerIndex - bContainerIndex : bContainerIndex - aContainerIndex
       })
 
     resolve(await createVideoAudioFormat(sortedVideoFormats[0], videoInfo))
