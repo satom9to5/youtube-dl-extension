@@ -1,4 +1,4 @@
-FROM node:12.10.0-alpine
+FROM node:20.16.0-alpine
 
 ENV LANG=ja_JP.UTF-8
 

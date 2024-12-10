@@ -15,6 +15,7 @@ declare namespace youtubeDlNativeMessage {
     pidfile_path: string;
     youtubedl_path: string;
     ffmpeg_path: string;
+    temp_directory: string;
     log_directory: string;
     browser: string;
     dev?: boolean;
@@ -34,7 +35,8 @@ declare namespace youtubeDlNativeMessage {
     title: string;
     video_format: string;
     audio_format: string;
-    output_path: string;
+    output_directory: string;
+    filename: string;
     parameter: string;
   }
   
@@ -65,7 +67,8 @@ declare namespace youtubeDlNativeMessage {
     audio_format: string;
     url: string;
     title: string;
-    output_path: string;
+    output_directory: string;
+    filename: string;
     parameter: string;
     created_at: number;
     updated_at: number;
@@ -79,7 +82,8 @@ declare namespace youtubeDlNativeMessage {
     audio_format: string;
     url: string;
     title: string;
-    output_path: string;
+    output_directory: string;
+    filename: string;
     parameter: string;
     created_at: number;
     updated_at: number;

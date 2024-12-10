@@ -31,10 +31,9 @@ import Vue from 'vue'
 
 import ytdl from 'ytdl-core'
 
-import tabs from 'chromeLibs/tabs'
-
 import { getInfo, getMaxPriorityFormat, createVideoAudioFormat } from 'common/youtubeFormat'
-import workerMessage from 'common/workerMessage'
+import workerRequest from 'common/workerRequest'
+import { getCurrentTab } from 'common/tabs'
 import { isWatchPage } from 'common/url'
 
 export default Vue.extend({
@@ -51,12 +50,7 @@ export default Vue.extend({
   },
   
   async created() {
-    const queryInfo: chrome.tabs.QueryInfo = {
-      active: true,
-      currentWindow: true
-    }
-    const currentTabs = await tabs.query(queryInfo)
-    const currentTab = currentTabs[0]
+    const currentTab: chrome.tabs.Tab = await getCurrentTab();
 
     if (!currentTab.url || !isWatchPage(currentTab.url)) {
       this.loading = false
@@ -68,7 +62,7 @@ export default Vue.extend({
       this.loading = false
       return
     }
-    console.log(this.videoInfo)
+    //console.log(this.videoInfo)
 
     this.formats = this.videoInfo.formats.map((format: ytdl.videoFormat) => {
       return {...format, formatType: this.getFormatType(format)}
@@ -90,17 +84,17 @@ export default Vue.extend({
         return
       }
 
-      await workerMessage.addQueue(maxPriorityFormat, this.videoInfo)
+      await workerRequest.addQueue(maxPriorityFormat, this.videoInfo)
     },    
     async queueFormat(index: number) {
-      console.log(this.formats[index])
+      //console.log(this.formats[index])
       if (this.formats[index].bitrate == null) {
         return
       }
 
       const videoAudioFormat: VideoAudioFormat = await createVideoAudioFormat(this.formats[index], this.videoInfo)
 
-      await workerMessage.addQueue(videoAudioFormat, this.videoInfo)
+      await workerRequest.addQueue(videoAudioFormat, this.videoInfo)
     }
   }
 });

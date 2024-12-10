@@ -7,8 +7,9 @@
         <a :href="task.url" target="_blank" rel="noopener noreferrer">
           {{ task.title }} (<span>{{ task.video_format }}p</span><span v-show="task.audio_format != ''"> x {{ task.audio_format }}p</span>)
         </a>
+        <a href="#" v-on:click="removeQueue(task.id)">Remove</a>
         <p>
-          Output Path: {{ task.output_path }}
+          Output Path: {{ task.output_directory }}/{{ task.filename }}
           Created At: {{ task.created_at }}
         </p>
       </li>
@@ -21,7 +22,7 @@ import Vue from 'vue'
 
 import tabs from 'chromeLibs/tabs'
 
-import workerMessage from 'common/workerMessage'
+import workerRequest from 'common/workerRequest'
 
 export default Vue.extend({
   name: 'Info',
@@ -36,10 +37,14 @@ export default Vue.extend({
   },
   
   async created() {
-    this.tasks = await workerMessage.getTasks()
+    this.tasks = await workerRequest.getTasks()
   },
 
   methods: {
+    async removeQueue(id: string) {
+      await workerRequest.removeQueue(id)
+      this.tasks = await workerRequest.getTasks()
+    }
   }
 });
 </script>

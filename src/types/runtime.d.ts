@@ -4,3 +4,8 @@ type RuntimeMessage = {
 }
 
 type GetTasksByIdsData = string[]
+
+type FromRuntimeMessage = {
+  type: string,
+  data: any
+}

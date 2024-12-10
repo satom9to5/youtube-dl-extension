@@ -20,9 +20,9 @@ export function getInfo(url: string): Promise<ytdl.videoInfo | Error> {
       return resolve(videoInfoCache.videoInfo)
     }
 
-    const videoInfo: ytdl.videoInfo = await ytdl.getInfo(url)
-    if (!videoInfo || videoInfo.status != 'ok') {
-      reject(new Error('cannot get videoInfo'))
+    const videoInfo: ytdl.videoInfo = await ytdl.getInfo(videoId)
+    if (!videoInfo || !videoInfo.formats || videoInfo.formats.length == 0) {
+      return reject(new Error('cannot get videoInfo'))
     }
 
     const newVideoInfoCache: VideoInfoCache = {
@@ -61,8 +61,13 @@ export function getMaxPriorityFormat(videoInfo: ytdl.videoInfo): Promise<VideoAu
 
     const descOrder = priorityConfig.order == 'high'
 
+    // aコーデックをyt-dlpの優先度に合わせる
+    // https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#sorting-formats
     const sortedVideoFormats = videoInfo.formats
-      .filter((videoFormat: ytdl.videoFormat) => videoFormat.bitrate !== null)
+      .filter((videoFormat: ytdl.videoFormat) => {
+        // yt-dlpで対応してないitagを除外
+        return videoFormat.bitrate !== null && (videoFormat.itag < 394 || videoFormat.itag > 401)
+      })
       .sort((a: ytdl.videoFormat, b: ytdl.videoFormat): number => {
         if (a.container !== b.container) {
           let aContainerIndex: number = 0
@@ -107,12 +112,14 @@ export function createVideoAudioFormat(videoFormat: ytdl.videoFormat, videoInfo:
       })
     }
 
-    const audioContainer: string = (videoFormat.container === 'webm') ? 'webm' : 'mp4'
+    const audioMimeTypes: string[] = (videoFormat.container === 'webm') ? ['audio/webm'] : ['audio/m4a', 'audio/mp4'];
 
     const sortedAudioFormats = videoInfo.formats
-      .filter((format: ytdl.videoFormat) => format.audioQuality && format.quality === "tiny" && format.container == audioContainer)
-      .sort((a: ytdl.videoFormat, b: ytdl.videoFormat): number => {
-        return (a.audioQuality === b.audioQuality || a.audioQuality == 'ADIO_QUALITY_MEDIUM') ? -1 : 1
+      //.filter((format: ytdl.videoFormat) => format.audioQuality && format.quality === "tiny" && format.container == audioContainer)
+      .filter((format: ytdl.videoFormat) => {
+        return audioMimeTypes.filter(mimeType => format.mimeType && format.mimeType.indexOf(mimeType) >= 0).length > 0
+      }).sort((a: ytdl.videoFormat, b: ytdl.videoFormat): number => {
+        return (a.audioQuality === b.audioQuality || a.audioQuality == 'AUDIO_QUALITY_MEDIUM') ? -1 : 1
       })
 
     resolve({
@@ -123,7 +130,7 @@ export function createVideoAudioFormat(videoFormat: ytdl.videoFormat, videoInfo:
 }
 
 export function getVideoTitleFromVideoInfo(videoInfo: ytdl.videoInfo): string {
-  return videoInfo.player_response.videoDetails.title
+  return videoInfo.videoDetails.title
 }
 
 export function saveVideoFormat(url: string, videoFormat: ytdl.videoFormat): Promise<boolean> {

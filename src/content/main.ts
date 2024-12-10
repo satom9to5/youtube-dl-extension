@@ -2,19 +2,14 @@ import ytdl from 'ytdl-core'
 
 import message from 'chromeLibs/message'
 
-import loadConfig from 'content/loadConfig'
-import { urlMatch } from 'content/manipulate'
+import workerRequest from 'common/workerRequest'
+
+import config from 'content/config'
+import { addTargetClass, removeTargetClass } from 'content/manipulate'
+import { urlMatch } from 'content/helpers'
+import setRuntimeMessage from 'content/runtimeMessage'
 
 import 'css/content.css'
-
-type ManipulateElement = {
-  element: Element,
-  manipulate: manipulationConfig.Manipulate
-};
-
-type VideoIdTargets = {
-  [key: string]: ManipulateElement[];
-};
 
 function addVideoIdTargets(videoIdTargets: VideoIdTargets, videoId: string, element: Element, manipulate: manipulationConfig.Manipulate): void {
   if (!videoIdTargets[videoId]) {
@@ -27,32 +22,7 @@ function addVideoIdTargets(videoIdTargets: VideoIdTargets, videoId: string, elem
   })
 }
 
-function addTargetClass(manipulateElement: ManipulateElement): void {
-  const { element, manipulate } = manipulateElement
-
-  manipulate.currents.forEach((targetAction: manipulationConfig.TargetAction) => {
-    if (!element.parentNode) {
-      return
-    }
-
-    if (targetAction.selector && element.parentNode.querySelector(targetAction.selector) !== element) {
-      return
-    }
-
-    element.classList.add('youtube-dl-queueing')
-  })
-
-  manipulate.children.forEach((targetAction: manipulationConfig.TargetAction) => {
-    if (!targetAction.selector) {
-      return
-    }
-
-    Array.from(element.querySelectorAll(targetAction.selector)).forEach((child: Element) => {
-      child.classList.add('youtube-dl-queueing')
-    })
-  })
-}
-
+// TODO url忠のidと取得結果のidが一致しているかチェック
 function findTasks(videoIdTargets: VideoIdTargets): Promise<null> {
   return new Promise(async (resolve, reject) => {
     const videoIds = Object.getOwnPropertyNames(videoIdTargets)
@@ -61,20 +31,17 @@ function findTasks(videoIdTargets: VideoIdTargets): Promise<null> {
       return resolve(null)
     }
 
-    const messageData: RuntimeMessage = {
-      type: 'getTasksByIds',
-      data: videoIds
-    }
+    const tasks = await workerRequest.getTasksByIds(videoIds)
 
-    const tasks = await message.send(messageData)
-
-    tasks.forEach((task: youtubeDlNativeMessage.Task) => {
+    tasks.forEach((task: youtubeDlWorkerServer.Task) => {
       const id: string = task.id
       if (!videoIdTargets[id]) {
         return
       }
 
-      videoIdTargets[id].forEach((manipulateElement: ManipulateElement) => addTargetClass(manipulateElement))
+      videoIdTargets[id].forEach((manipulateElement: ManipulateElement) => {
+	addTargetClass(manipulateElement)
+      })
     })
 
     resolve(null)
@@ -87,12 +54,12 @@ function findManipulateTargetsOnLoad(config: manipulationConfig.ManipulationConf
 
   config.manipulates.forEach((manipulate: manipulationConfig.Manipulate): void => {
     document.querySelectorAll(manipulate.query).forEach((element: Element) => {
-       const videoId = urlMatch(element, config, manipulate)
-       if (!videoId) {
-         return
-       }
+      const videoId = urlMatch(element, config, manipulate)
+      if (!videoId) {
+        return
+      }
 
-       addVideoIdTargets(videoIdTargets, videoId, element, manipulate)
+      addVideoIdTargets(videoIdTargets, videoId, element, manipulate)
     }) 
   })
 
@@ -103,6 +70,7 @@ function findManipulateTargetsOnLoad(config: manipulationConfig.ManipulationConf
 function findManipulateTargets(config: manipulationConfig.ManipulationConfig, records: MutationRecord[]): void {
   const videoIdTargets: VideoIdTargets = {};
 
+  // TODO tab change
   records.forEach((record: MutationRecord) => {
     const { target } = record
 
@@ -139,11 +107,8 @@ function findManipulateTargets(config: manipulationConfig.ManipulationConfig, re
               if (!(target instanceof Element) || !target.matches(query) || attributeName != record.attributeName) {
                 return
               }
-  
-              target.classList.remove('youtube-dl-queueing')
-              Array.from(target.querySelectorAll('youtube-dl-queueing')).forEach(element => {
-                element.classList.remove('youtube-dl-queueing')
-              })
+
+	      removeTargetClass(target, manipulate);
 
               const videoId = urlMatch(target, config, manipulate)
               if (!videoId) {
@@ -176,7 +141,6 @@ const setObserver = (config: manipulationConfig.ManipulationConfig) => {
   configObserver.observe(document.body, options)
 }
 
-const config: manipulationConfig.ManipulationConfig = loadConfig()
-
 findManipulateTargetsOnLoad(config)
 setObserver(config)
+setRuntimeMessage()

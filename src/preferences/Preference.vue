@@ -26,6 +26,14 @@
            /> 
         </div>
         <div>
+          Port: <input
+            type="text"
+            name="port"
+            id="port"
+            v-model="input.port"
+          /> 
+        </div>
+        <div>
           Pidfile Path: <input
             type="text"
             name="pidfile_path"
@@ -66,6 +74,14 @@
           />
         </div>
         <div>
+          Temporary Directory (relative path only): <input
+            type="text"
+            name="temp_directory"
+            id="temp_directory"
+            v-model="input.temp_directory"
+          />
+        </div>
+        <div>
           Log Directory: <input
             type="text"
             name="log_directory"
@@ -95,8 +111,7 @@
           /> 
         </div>
 
-        <h4></h4>
-          Enable tags
+        <h4>Enable tags</h4>
         <ul>
           <li>[id]: Video identifier</li>
           <li>[title]: Video title</li>
@@ -104,6 +119,7 @@
           <li>[author]: Full name of video uploader</li>
           <li>[width]: Width of video</li>
           <li>[height]: Height of video</li>
+          <li>[qualityLabel]: Textual description of width and height</li>
           <li>[resolution]: Width and height description</li>
         </ul>
         Example: <span class="example">[id]_[title]_[ext]</span><br />
@@ -139,10 +155,12 @@ export default Vue.extend({
       input: {
         sqlite_path: null,
         pidfile_path: null,
+        port: null,
         youtubedl_path: null,
         youtubedl_parameter: null,
         ffmpeg_path: null,
         output_directory: null,
+        temp_directory: null,
         log_directory: null,
         dev: false,
         output_format: null,
@@ -164,10 +182,12 @@ export default Vue.extend({
 
       this.input.sqlite_path = preference.sqlite_path
       this.input.pidfile_path = preference.pidfile_path
+      this.input.port = preference.port
       this.input.youtubedl_path = preference.youtubedl_path
       this.input.youtubedl_parameter = preference.youtubedl_parameter
       this.input.ffmpeg_path = preference.ffmpeg_path
       this.input.output_directory = preference.output_directory
+      this.input.temp_directory = preference.temp_directory
       this.input.log_directory = preference.log_directory
       this.input.dev = preference.dev
       this.input.output_format = preference.output_format

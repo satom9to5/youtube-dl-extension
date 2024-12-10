@@ -14,6 +14,7 @@
     "default_title": "youtube-dl",
     "default_popup": "static/popup.html"
   },
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self';",
   "content_scripts": [{
     "matches": [
       "*://www.youtube.com/*"
@@ -44,7 +45,8 @@
     "storage",
     "tabs",
     "*://*.youtube.com/*",
-    "*://*.googlevideo.com/*"
+    "*://*.googlevideo.com/*",
+    "*://localhost/*"
   ],
   "version": "1.0"
 }

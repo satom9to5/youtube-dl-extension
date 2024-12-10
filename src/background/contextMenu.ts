@@ -1,15 +1,17 @@
-import nativeMessage from 'chromeLibs/nativeMessage'
 import storage from 'chromeLibs/storage'
 import tabs from 'chromeLibs/tabs'
 
 import { getInfo, getMaxPriorityFormat } from 'common/youtubeFormat'
+import workerRequest from 'common/workerRequest'
 import workerMessage from 'common/workerMessage'
 import browser from 'common/browser'
+import { getCurrentTab } from 'common/tabs'
 import { isWatchPage } from 'common/url'
+
 
 function youtubeDlWorkerService(info: chrome.contextMenus.OnClickData): Promise<boolean> {
   return new Promise(async (resolve, reject) => {
-    if (await workerMessage.checkRunningWorker()) { 
+    if (await workerRequest.checkRunningWorker()) { 
       if (await workerMessage.stopWorker()) {
         switchWorkerStatus(false)
 
@@ -43,22 +45,32 @@ function youtubeDlWorkerAddMaxPriorityQueue(info: chrome.contextMenus.OnClickDat
       return reject('undefined url.')
     }
 
+    const currentTab: chrome.tabs.Tab = await getCurrentTab();
+
     // 取得に必要な情報：動画基本情報と自動選択したフォーマット
     const videoInfo = await getInfo(url)
     if (videoInfo instanceof Error) {
       return reject(videoInfo)
     }
-    console.log(videoInfo)
+    //console.log(videoInfo)
     
-    const title: string = videoInfo.title
+    const title: string = videoInfo.videoDetails.title
 
     const maxPriorityFormat = await getMaxPriorityFormat(videoInfo)
     if (maxPriorityFormat.videoFormat == null) {
       return reject('cannot get video format.')
     }
-    console.log(maxPriorityFormat) 
+    //console.log(maxPriorityFormat) 
 
-    resolve(await workerMessage.addQueue(maxPriorityFormat, videoInfo))
+    if (currentTab.id !== undefined && currentTab.url == info.pageUrl) {
+      const message: FromRuntimeMessage = {
+        type: 'addQueueSuccess',
+        data: info.linkUrl
+      }
+      chrome.tabs.sendMessage(currentTab.id, message, res => {})
+    }
+
+    resolve(await workerRequest.addQueue(maxPriorityFormat, videoInfo))
   })
 }
 
@@ -76,7 +88,7 @@ function switchWorkerStatus(isStart = true): void {
 
 function initializeByWorkerRunning(): Promise<null> {
   return new Promise(async (resolve, reject) => {
-    if (await workerMessage.checkRunningWorker()) { 
+    if (await workerRequest.checkRunningWorker()) { 
       switchWorkerStatus(true)
     } 
 
@@ -105,7 +117,6 @@ const contextMenuConfigs = [
     title: 'Queue youtube-dl (max priorty)',
     contexts: ['link'],
     onclick: youtubeDlWorkerAddMaxPriorityQueue,
-    //documentUrlPatterns: ["https://www.youtube.com/watch*"],
     targetUrlPatterns: ["https://www.youtube.com/watch*"]
   },
 ]

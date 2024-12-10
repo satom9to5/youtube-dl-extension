@@ -1,5 +1,3 @@
-import workerMessage from 'common/workerMessage'
-
 function isRuntimeMessage(message: any): message is RuntimeMessage {
   return message !== null && message !== undefined &&
          typeof message === 'object' && !Array.isArray(message) && 
@@ -13,11 +11,6 @@ export default function() {
     } 
 
     switch (message.type) {
-    case 'getTasksByIds':
-      // async/awaitを使いたい場合Promiseで囲む必要があるが、`return true`とバッティングするのでthenを使用
-      workerMessage.getTasksByIds(message.data)
-                   .then(tasks => sendResponse(tasks))
-      break
     default:
       sendResponse(null)
       break
